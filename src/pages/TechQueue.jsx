@@ -57,7 +57,7 @@ const MOCK_TICKETS = [
 
 export default function TechQueue() {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState(MOCK_TICKETS);
+  const [tickets] = useState(MOCK_TICKETS);
   const [filter, setFilter] = useState('todos');
 
   const getPriorityBadge = (priority) => {

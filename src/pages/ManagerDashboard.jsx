@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { TrendingUp, Clock, CheckCircle, AlertTriangle, Users, Star } from 'lucide-react';
+import { TrendingUp, Clock, CheckCircle, AlertTriangle, Star } from 'lucide-react';
 import './ManagerDashboard.css';
 
 // Mock Data

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Paperclip, Send, Clock, User, CheckCircle2, 
-  AlertTriangle, MoreVertical, Play, Pause, XCircle 
+  ArrowLeft, Paperclip, Send, CheckCircle2, 
+  AlertTriangle, MoreVertical, Pause 
 } from 'lucide-react';
 import './TicketDetails.css';
 
