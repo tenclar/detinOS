@@ -40,7 +40,7 @@ services:
   # 3. Fastify Backend Service
   backend:
     build:
-      context: ./server
+      context: ./backend
       dockerfile: Dockerfile
     container_name: detinos_backend
     restart: always
@@ -64,7 +64,7 @@ services:
   # 4. React Frontend SPA + Nginx Service
   frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: detinos_frontend
     restart: always

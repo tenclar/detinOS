@@ -1,16 +1,65 @@
-# React + Vite
+# detinOS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de Gestão de Ordens de Serviço e Suporte de TI (detinOS).
 
-Currently, two official plugins are available:
+## 📁 Estrutura do Projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+O repositório é organizado em dois módulos principais:
 
-## React Compiler
+```
+detinOS/
+├── backend/                  # API Fastify + TypeScript + Prisma
+│   ├── src/                  # Rotas, controllers, regras de negócio
+│   ├── prisma/               # Schema e migrações do banco PostgreSQL
+│   ├── Dockerfile            # Container de produção do backend
+│   ├── package.json
+│   └── tsconfig.json
+├── frontend/                 # Aplicação SPA React + Vite
+│   ├── src/                  # Componentes, páginas e layouts React
+│   ├── public/               # Arquivos estáticos
+│   ├── nginx.conf            # Configuração do Nginx (reverse proxy para API)
+│   ├── Dockerfile            # Multi-stage build Nginx + SPA
+│   ├── package.json
+│   └── vite.config.js
+├── .env.example              # Modelo de variáveis de ambiente
+├── docker-compose.yml        # Orquestração completa (PostgreSQL, Redis, Backend, Frontend)
+└── README.md
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Como Executar
 
-## Expanding the ESLint configuration
+### 1. Com Docker Compose (Ambiente Completo)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Copie o arquivo de variáveis de ambiente:
+```bash
+cp .env.example .env
+```
+
+Inicie todos os serviços (Banco de Dados, Redis, Backend e Frontend):
+```bash
+docker compose up --build -d
+```
+
+- **Frontend / Aplicação:** [http://localhost](http://localhost)
+- **Backend API:** [http://localhost:3000](http://localhost:3000) (ou via `/api` pelo Nginx)
+- **PostgreSQL:** `localhost:5432`
+- **Redis:** `localhost:6379`
+
+---
+
+### 2. Desenvolvimento Local
+
+#### Backend:
+```bash
+cd backend
+npm install
+npm run prisma:generate
+npm run dev
+```
+
+#### Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
