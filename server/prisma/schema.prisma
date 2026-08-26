@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USUARIO_COMUM
+  TECNICO
+  GESTOR
+  ADMIN
+}
+
+enum Priority {
+  BAIXA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum TicketStatus {
+  NOVO
+  EM_ANDAMENTO
+  AGUARDANDO_USUARIO
+  CONCLUIDO
+  CANCELADO
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USUARIO_COMUM)
+  department String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ticketsOpened   Ticket[]  @relation("OpenedTickets")
+  ticketsAssigned Ticket[]  @relation("AssignedTickets")
+  comments        Comment[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  slaHours    Int      @default(24)
+  tickets     Ticket[]
+
+  @@map("categories")
+}
+
+model Ticket {
+  id          String       @id @default(uuid())
+  protocol    String       @unique
+  title       String
+  description String
+  status      TicketStatus @default(NOVO)
+  priority    Priority     @default(MEDIA)
+  
+  authorId    String
+  author      User         @relation("OpenedTickets", fields: [authorId], references: [id])
+
+  assigneeId  String?
+  assignee    User?        @relation("AssignedTickets", fields: [assigneeId], references: [id])
+
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id])
+
+  comments    Comment[]
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("tickets")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  isInternal Boolean @default(false)
+  
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  createdAt DateTime @default(now())
+
+  @@map("comments")
+}
