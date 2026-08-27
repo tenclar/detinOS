@@ -14,7 +14,19 @@ enum Role {
   ADMIN
 }
 
+enum Status {
+  ATIVO
+  INATIVO
+}
+
 enum Priority {
+  BAIXA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum Urgency {
   BAIXA
   MEDIA
   ALTA
@@ -29,70 +41,240 @@ enum TicketStatus {
   CANCELADO
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      Role     @default(USUARIO_COMUM)
-  department String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum SphereType {
+  ESTADUAL
+  MUNICIPAL
+  FEDERAL
+  OUTRO
+}
 
-  ticketsOpened   Ticket[]  @relation("OpenedTickets")
-  ticketsAssigned Ticket[]  @relation("AssignedTickets")
-  comments        Comment[]
+enum ArticleAudience {
+  GERAL
+  TECNICO
+}
 
-  @@map("users")
+enum ArticleStatus {
+  PUBLICADO
+  RASCUNHO
+  ARQUIVADO
+}
+
+enum CommentType {
+  USER
+  TECH
+  SYSTEM
+}
+
+model Department {
+  id             String   @id @default(uuid())
+  name           String   @unique
+  acronym        String
+  head           String?
+  phoneExtension String?
+  status         Status   @default(ATIVO)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users   User[]
+  tickets Ticket[]
+
+  @@map("departments")
+}
+
+model PartnerAgency {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  acronym   String
+  sphere    SphereType @default(ESTADUAL)
+  contact   String?
+  status    Status     @default(ATIVO)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  users   User[]
+  tickets Ticket[]
+
+  @@map("partner_agencies")
 }
 
 model Category {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String?
-  slaHours    Int      @default(24)
-  tickets     Ticket[]
+  id                  String   @id @default(uuid())
+  name                String   @unique
+  description         String?
+  responsibleTeam     String   @default("Suporte TI")
+  slaFirstResponseMin Int      @default(30)
+  slaResolutionMin    Int      @default(240)
+  status              Status   @default(ATIVO)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tickets  Ticket[]
+  articles Article[]
 
   @@map("categories")
 }
 
+model User {
+  id              String         @id @default(uuid())
+  username        String         @unique
+  email           String         @unique
+  name            String
+  password        String
+  role            Role           @default(USUARIO_COMUM)
+  contact         String?
+  status          Status         @default(ATIVO)
+  departmentId    String?
+  department      Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  partnerAgencyId String?
+  partnerAgency   PartnerAgency? @relation(fields: [partnerAgencyId], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  ticketsOpened   Ticket[]           @relation("OpenedTickets")
+  ticketsAssigned Ticket[]           @relation("AssignedTickets")
+  comments        Comment[]
+  articles        Article[]
+  attachments     TicketAttachment[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
 model Ticket {
-  id          String       @id @default(uuid())
-  protocol    String       @unique
-  title       String
-  description String
-  status      TicketStatus @default(NOVO)
-  priority    Priority     @default(MEDIA)
+  id                  String         @id @default(uuid())
+  protocol            String         @unique
+  title               String
+  description         String
+  status              TicketStatus   @default(NOVO)
+  priority            Priority       @default(MEDIA)
+  urgency             Urgency        @default(MEDIA)
+  location            String
+  contact             String
   
-  authorId    String
-  author      User         @relation("OpenedTickets", fields: [authorId], references: [id])
+  authorId            String
+  author              User           @relation("OpenedTickets", fields: [authorId], references: [id])
 
-  assigneeId  String?
-  assignee    User?        @relation("AssignedTickets", fields: [assigneeId], references: [id])
+  assigneeId          String?
+  assignee            User?          @relation("AssignedTickets", fields: [assigneeId], references: [id], onDelete: SetNull)
 
-  categoryId  String
-  category    Category     @relation(fields: [categoryId], references: [id])
+  departmentId        String?
+  department          Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
-  comments    Comment[]
+  partnerAgencyId     String?
+  partnerAgency       PartnerAgency? @relation(fields: [partnerAgencyId], references: [id], onDelete: SetNull)
+
+  categoryId          String
+  category            Category       @relation(fields: [categoryId], references: [id])
+
+  slaFirstResponseAt  DateTime?
+  slaResolutionAt     DateTime?
+  firstRespondedAt    DateTime?
+  resolvedAt          DateTime?
+  closedAt            DateTime?
   
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  isSlaPaused         Boolean        @default(false)
+  pausedAt            DateTime?
+  totalPausedMinutes  Int            @default(0)
+
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  comments            Comment[]
+  attachments         TicketAttachment[]
 
   @@map("tickets")
 }
 
 model Comment {
+  id         String      @id @default(uuid())
+  ticketId   String
+  ticket     Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  authorId   String?
+  author     User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  type       CommentType @default(USER)
+  content    String
+  isInternal Boolean     @default(false)
+  
+  createdAt  DateTime    @default(now())
+
+  @@map("comments")
+}
+
+model TicketAttachment {
+  id           String   @id @default(uuid())
+  ticketId     String
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  originalName String
+  storedName   String
+  mimeType     String
+  size         Int
+  path         String
+  
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime @default(now())
+
+  @@map("ticket_attachments")
+}
+
+model Article {
+  id             String          @id @default(uuid())
+  title          String
+  slug           String          @unique
+  excerpt        String
+  content        String
+  
+  categoryId     String
+  category       Category        @relation(fields: [categoryId], references: [id])
+
+  authorId       String
+  author         User            @relation(fields: [authorId], references: [id])
+
+  audience       ArticleAudience @default(GERAL)
+  status         ArticleStatus   @default(PUBLICADO)
+  
+  views          Int             @default(0)
+  usefulVotes    Int             @default(0)
+  notUsefulVotes Int             @default(0)
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  feedbacks      ArticleFeedback[]
+
+  @@map("articles")
+}
+
+model ArticleFeedback {
   id        String   @id @default(uuid())
-  content   String
-  isInternal Boolean @default(false)
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
   
-  ticketId  String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
+  isUseful  Boolean
+  userIp    String?
+  userId    String?
   
   createdAt DateTime @default(now())
 
-  @@map("comments")
+  @@map("article_feedbacks")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ipAddress String?
+  
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
 }

@@ -2,28 +2,44 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import { env } from './config/env';
+import { jwtPlugin } from './plugins/jwt';
+import { multipartPlugin } from './plugins/multipart';
+import { swaggerPlugin } from './plugins/swagger';
+import { errorHandler } from './plugins/error-handler';
+import { appRoutes } from './routes';
 
-export function buildApp() {
+export async function buildApp() {
   const app = Fastify({
     logger: true,
+    trustProxy: true,
   });
 
-  // Register Security Plugins
-  app.register(helmet, {
-    contentSecurityPolicy: false, // Managed by Nginx reverse proxy if needed
+  // Global Error Handler
+  app.setErrorHandler(errorHandler);
+
+  // Security Plugins
+  await app.register(helmet, {
+    contentSecurityPolicy: false,
   });
 
-  app.register(cors, {
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  await app.register(cors, {
+    origin: env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
   });
 
-  app.register(rateLimit, {
-    max: 100,
+  await app.register(rateLimit, {
+    max: 200,
     timeWindow: '1 minute',
   });
 
-  // Healthcheck Route
+  // Custom Infrastructure Plugins
+  await app.register(jwtPlugin);
+  await app.register(multipartPlugin);
+  await app.register(swaggerPlugin);
+
+  // Global Healthcheck Route
   app.get('/health', async () => {
     return {
       status: 'ok',
@@ -32,14 +48,8 @@ export function buildApp() {
     };
   });
 
-  // API Status & Versioning Route
-  app.get('/api/v1/status', async () => {
-    return {
-      status: 'online',
-      version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-    };
-  });
+  // Register All API v1 Routes
+  await app.register(appRoutes, { prefix: '/api/v1' });
 
   return app;
 }
