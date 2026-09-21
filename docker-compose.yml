@@ -48,7 +48,7 @@ services:
     container_name: detinos_frontend
     restart: always
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "${FRONTEND_PORT:-8050}:80"
     depends_on:
       - backend
     networks:
@@ -60,6 +60,3 @@ volumes:
 networks:
   digital_network:
     external: true
-
-
-
