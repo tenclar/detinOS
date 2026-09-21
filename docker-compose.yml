@@ -22,6 +22,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: detinos_backend:latest
     container_name: detinos_backend
     restart: always
     environment:
@@ -44,6 +45,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: detinos_frontend:latest
     container_name: detinos_frontend
     restart: always
     ports:
