@@ -10,7 +10,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - detinos_network
+      - digital_network
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -37,7 +37,6 @@ services:
     depends_on:
       - redis
     networks:
-      - detinos_network
       - digital_network
 
   # 3. React Frontend SPA + Nginx Service
@@ -53,16 +52,14 @@ services:
     depends_on:
       - backend
     networks:
-      - detinos_network
+      - digital_network
 
 volumes:
   redis_data:
 
 networks:
-  detinos_network:
-    driver: overlay
-    attachable: true
   digital_network:
     external: true
+
 
 
