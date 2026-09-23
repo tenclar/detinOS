@@ -1,6 +1,9 @@
 # Stage 1: Build stage
 FROM node:20-alpine AS builder
 
+# Install OpenSSL for Prisma client generation in Alpine
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 # Copy package files
@@ -20,15 +23,18 @@ RUN npm run build
 # Stage 2: Production runtime stage
 FROM node:20-alpine AS runner
 
+# Install OpenSSL for Prisma runtime in Alpine
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy built application and production node_modules from builder
-COPY package.json package-lock.json* ./
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma ./prisma
+# Copy built application and production node_modules from builder with correct ownership
+COPY --chown=node:node package.json package-lock.json* ./
+COPY --chown=node:node --from=builder /app/dist ./dist
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/prisma ./prisma
 
 # Use non-root node user for security
 USER node
