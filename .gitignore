@@ -14,6 +14,7 @@ dist-ssr
 *.local
 uploads
 backend/uploads
+!backend/src/modules/uploads/
 
 # Environment files
 .env
