@@ -49,7 +49,3 @@ jobs:
           push: true
           tags: ${{ steps.prep.outputs.frontend_tag }}
 
-      - name: Trigger Portainer Webhook (Auto-Update Stack)
-        if: ${{ secrets.PORTAINER_WEBHOOK_URL != '' }}
-        run: |
-          curl -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}"
