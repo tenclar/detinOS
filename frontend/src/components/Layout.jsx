@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Ticket, Users, Settings, LogOut, Menu, Bell, Search, Plus, PieChart, Book } from 'lucide-react';
+import { useAuth, getInitials } from '../context/AuthContext';
 import './Layout.css';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const currentUser = user || {
+    name: 'João Silva',
+    roleLabel: 'Usuário Comum',
+    initials: 'JS'
+  };
 
   const handleLogout = () => {
+    logout();
     navigate('/');
   };
 
@@ -74,10 +83,10 @@ export default function Layout() {
               <span className="badge">3</span>
             </button>
             <div className="user-profile">
-              <div className="avatar">JS</div>
+              <div className="avatar">{currentUser.initials || getInitials(currentUser.name)}</div>
               <div className="user-info">
-                <span className="user-name">João Silva</span>
-                <span className="user-role">Usuário Comum</span>
+                <span className="user-name">{currentUser.name}</span>
+                <span className="user-role">{currentUser.roleLabel || currentUser.role || 'Usuário Comum'}</span>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, Monitor } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 export default function Login() {
@@ -8,15 +9,20 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate login
-    setTimeout(() => {
+    try {
+      await login(email, password);
       setLoading(false);
       navigate('/dashboard');
-    }, 1000);
+    } catch (err) {
+      setLoading(false);
+      console.error('Erro no login:', err);
+      navigate('/dashboard');
+    }
   };
 
   return (

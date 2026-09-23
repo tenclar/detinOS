@@ -1,20 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Paperclip, Send, ArrowLeft, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './NewTicket.css';
 
 export default function NewTicket() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
   const [formData, setFormData] = useState({
-    nome: 'João Silva',
+    nome: user?.name || 'João Silva',
     setor: '',
     orgao: '',
-    contato: '',
+    contato: user?.contact || '',
     categoria: '',
     urgencia: 'media',
     local: '',
     descricao: ''
   });
+
+  useEffect(() => {
+    if (user?.name) {
+      setFormData(prev => ({
+        ...prev,
+        nome: user.name,
+        contato: user.contact || prev.contato
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
